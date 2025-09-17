@@ -7,13 +7,12 @@ RUN npm install --production
 
 COPY . .
 
-# Create config directory
 RUN mkdir -p config
 
-# Add entry point script to create usergroups.csv with TurboRx as admin
+# Create start.sh script inside Dockerfile with correct permissions
 RUN echo '#!/bin/sh\n\
 echo "TurboRx,~" > config/usergroups.csv\n\
-node pokemon-showdown' > start.sh && chmod +x start.sh
+node pokemon-showdown' > ./start.sh && chmod +x ./start.sh
 
 EXPOSE 8000
 
