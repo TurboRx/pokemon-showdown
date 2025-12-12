@@ -675,9 +675,14 @@ export const commands: Chat.ChatCommands = {
 		if (!target) target = user.name;
 
 		const values = await Ladders.visualizeAll(target);
+    copilot/make-rank-command-scrollable
 		let buffer = `<div class="ladder">`;
 		buffer += Utils.html`<div>User: <strong>${target}</strong></div>`;
 		buffer += `<div style="overflow-x: auto;"><table>`;
+    
+		let buffer = `<div class="ladder" style="overflow-x: auto;"><table>`;
+		buffer += Utils.html`<tr><td colspan="8">User: <strong>${target}</strong></td></tr>`;
+    master
 
 		const ratings = values.join(``);
 		if (!ratings) {
