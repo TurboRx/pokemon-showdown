@@ -193,7 +193,7 @@ export const Replays = new class {
 						${order} LIMIT ${limit1}, 51;`.then(this.toReplays);
 				} else {
 					return replays.query()`SELECT uploadtime, id, format, players, rating, password FROM replayplayers
-						WHERE playerid = ${userid} private = ${isPrivate}
+						WHERE playerid = ${userid} AND private = ${isPrivate}
 						${order} LIMIT ${limit1}, 51;`.then(this.toReplays);
 				}
 			}
