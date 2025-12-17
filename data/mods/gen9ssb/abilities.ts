@@ -602,7 +602,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 				"I can't believe you've done this.",
 				"No thank you.",
 				"Seems a bit suss.",
-				"Thats probably hacked, shouldnt use it here.",
+				"That's probably hacked, shouldn't use it here.",
 				"Hacks will get you banned.",
 				"You silly sausage",
 				"Can you not?",

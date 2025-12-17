@@ -1391,7 +1391,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 		},
 		flags: {},
 		name: "Solar Core",
-		shortDesc: "Under Sun: Skip charging turn of it's own moves.",
+		shortDesc: "Under Sun: Skip charging turn of its own moves.",
 	},
 	solarwrath: {
 		onModifyAtkPriority: 5,

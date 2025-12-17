@@ -26,7 +26,7 @@ export const Abilities: import('../../../sim/dex-abilities').ModdedAbilityDataTa
 			this.add('-end', source, 'ability: Neutralizing Gas');
 
 			// FIXME this happens before the pokemon switches out, should be the opposite order.
-			// Not an easy fix since we cant use a supported event. Would need some kind of special event that
+			// Not an easy fix since we can't use a supported event. Would need some kind of special event that
 			// gathers events to run after the switch and then runs them when the ability is no longer accessible.
 			// (If you're tackling this, do note extreme weathers have the same issue)
 

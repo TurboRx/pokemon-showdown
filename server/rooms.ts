@@ -1517,7 +1517,7 @@ export class GlobalRoomState {
 			rankList.push({
 				symbol: rank,
 				name: (Config.groups[rank].name || null),
-				type: groupType }); // send the first character in the rank, incase they put a string several characters long
+				type: groupType }); // send the first character in the rank, in case they put a string several characters long
 		}
 
 		const typeOrder = ['punishment', 'normal', 'staff', 'leadership'];

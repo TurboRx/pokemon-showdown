@@ -276,7 +276,7 @@ export const Scripts: ModdedBattleScriptsData = {
 			action.speed = action.pokemon.getActionSpeed();
 		}
 	},
-	// For some god forsaken reason removing the boolean declarations causes the "battles dont end automatically" bug
+	// For some god forsaken reason removing the boolean declarations causes the "battles don't end automatically" bug
 	// I don't know why but in any case please don't touch this unless you know how to fix this
 	faintMessages(lastFirst = false, forceCheck = false, checkWin = true) {
 		if (this.ended) return;

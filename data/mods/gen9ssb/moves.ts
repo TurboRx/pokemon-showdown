@@ -31,7 +31,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		// normal = the targeted foe, self = the user, allySide = your side (eg light screen), foeSide = the foe's side (eg spikes), all = the field (eg raindance). More can be found in data/moves.js
 		type: "Water", // The move's type
 		// Other useful things
-		noPPBoosts: true, // add this to not boost the PP of a move, not needed for Z moves, dont include it otherwise
+		noPPBoosts: true, // add this to not boost the PP of a move, not needed for Z moves, don't include it otherwise
 		isZ: "crystalname", // marks a move as a z move, list the crystal name inside
 		zMove: {effect: ''}, // for status moves, what happens when this is used as a Z move? check data/moves.js for examples
 		zMove: {boost: {atk: 2}}, // for status moves, stat boost given when used as a z move

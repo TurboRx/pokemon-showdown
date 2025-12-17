@@ -300,7 +300,7 @@ export const Conditions: { [id: IDEntry]: ModdedConditionData & { innateName?: s
 			this.add(`c:|${getName('Arsenal')}|I should write something`);
 		},
 		onFaint() {
-			this.add(`c:|${getName('Arsenal')}|Dont forget this feeling !`);
+			this.add(`c:|${getName('Arsenal')}|Don't forget this feeling !`);
 		},
 	},
 	artemis: {
@@ -2058,7 +2058,7 @@ export const Conditions: { [id: IDEntry]: ModdedConditionData & { innateName?: s
 		},
 		onSwitchOut(pokemon) {
 			if (enemyStaff(pokemon) === 'kolohe') {
-				this.add(`c:|${getName('Rumia')}|i cant bring myself to do this...`);
+				this.add(`c:|${getName('Rumia')}|i can't bring myself to do this...`);
 			} else {
 				this.add(`c:|${getName('Rumia')}|brb ^_^`);
 			}
@@ -2564,7 +2564,7 @@ export const Conditions: { [id: IDEntry]: ModdedConditionData & { innateName?: s
 			this.add(`c:|${getName('Venous')}|bro the flute on stal is bonkers`);
 		},
 		onSwitchOut() {
-			this.add(`c:|${getName('2013 hindi room')}|when i said tine wins i didnt mean now`);
+			this.add(`c:|${getName('2013 hindi room')}|when i said tine wins i didn't mean now`);
 			this.add(`c:|${getName('Venous')}|dw watch this`);
 		},
 		onFaint() {
