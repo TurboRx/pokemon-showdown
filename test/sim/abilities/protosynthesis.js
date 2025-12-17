@@ -103,18 +103,21 @@ describe('Protosynthesis', () => {
 
 		assert.equal(tail.volatiles['protosynthesis'], undefined, `Scream Tail should not have been boosted by Protosynthesis because a weather suppressing ability was active when Sun started`);
 	});
-		{ species: 'Scream Tail', ability: 'protosynthesis', moves: ['splash'] },
-	], [
-		{ species: 'Psyduck', ability: 'cloudnine', moves: ['sunnyday'] },
-		{ species: 'Lotad', ability: 'swiftswim', moves: ['splash'] },
-	]]);
 
-	const tail = battle.p1.active[0];
-	battle.makeChoices('move splash', 'move sunnyday');
-	battle.makeChoices('move splash', 'switch 2');
+	it(`should activate when weather suppression ends`, () => {
+		battle = common.createBattle([[
+			{ species: 'Scream Tail', ability: 'protosynthesis', moves: ['splash'] },
+		], [
+			{ species: 'Psyduck', ability: 'cloudnine', moves: ['sunnyday'] },
+			{ species: 'Lotad', ability: 'swiftswim', moves: ['splash'] },
+		]]);
 
-	assert.equal(tail.volatiles['protosynthesis'].bestStat, 'spd', `Scream Tail should have been boosted by Protosynthesis because a weather suppressing ability ended while Sun was active`);
-});
+		const tail = battle.p1.active[0];
+		battle.makeChoices('move splash', 'move sunnyday');
+		battle.makeChoices('move splash', 'switch 2');
+
+		assert.equal(tail.volatiles['protosynthesis'].bestStat, 'spd', `Scream Tail should have been boosted by Protosynthesis because a weather suppressing ability ended while Sun was active`);
+	});
 
 	it(`should have its boost nullified by Neutralizing Gas`, () => {
 		battle = common.createBattle([[
