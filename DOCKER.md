@@ -78,10 +78,12 @@ The configuration file is automatically created from `config/config-example.js` 
 
 ## Data Persistence
 
-When using Docker Compose, the following directories are mounted as volumes to persist data:
-- `config/` - Server configuration and user groups
-- `databases/` - Database files
-- `logs/` - Server logs
+When using Docker Compose, the following are persisted using volumes:
+- `config/` - Server configuration and user groups (host directory mount)
+- `databases/` - Database files (host directory mount)
+- `logs/` - Server logs (host directory mount)
+- `dist/` - Compiled application code (Docker volume - persists builds across restarts)
+- `node_modules/` - Node dependencies (Docker volume - avoids reinstalling on restart)
 
 ## Troubleshooting
 
@@ -122,4 +124,12 @@ docker run -d -p 8000:8000 --name pokemon-showdown pokemon-showdown
 
 - The server will automatically install dependencies and build on first run
 - The first startup may take a few minutes while dependencies are installed
+- Docker Compose uses named volumes for `dist/` and `node_modules/` to persist builds and dependencies across container restarts
+- This prevents rebuild issues and significantly speeds up subsequent container starts
 - Configuration changes require a server restart to take effect
+
+### First Run vs Subsequent Runs
+
+**First run:** The container will install all dependencies and build the application. This may take 5-10 minutes.
+
+**Subsequent runs:** If using Docker Compose, the build artifacts and dependencies are preserved in Docker volumes, so the server starts immediately without rebuilding.

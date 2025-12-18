@@ -13,6 +13,16 @@ services:
       - ./databases:/app/databases
       # Mount logs directory to persist logs
       - ./logs:/app/logs
+      # Mount dist directory to persist build output and avoid rebuilds
+      - ps-dist:/app/dist
+      # Mount node_modules to persist dependencies
+      - ps-node-modules:/app/node_modules
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+
+volumes:
+  ps-dist:
+    driver: local
+  ps-node-modules:
+    driver: local
