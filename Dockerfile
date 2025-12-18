@@ -13,6 +13,9 @@ RUN mkdir -p config && \
         cp config/config-example.js config/config.js; \
     fi
 
+# Create required log directories
+RUN mkdir -p logs/repl logs/chat logs/modlog logs/tickets
+
 # Expose the default port
 EXPOSE 8000
 
