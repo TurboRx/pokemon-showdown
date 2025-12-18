@@ -1,4 +1,4 @@
-# Use Node.js LTS version  
+# Use Node.js LTS version
 FROM node:20
 
 # Set working directory
@@ -20,6 +20,6 @@ RUN mkdir -p logs/repl logs/chat logs/modlog logs/tickets
 EXPOSE 8000
 
 # The pokemon-showdown script will install dependencies and build on first run
-# Note: In production deployments, consider mounting /app/dist as a volume 
-# to persist the build across container restarts and avoid rebuild issues
+# Note: In production deployments, use docker-compose.yml which mounts /app/dist
+# and /app/node_modules as volumes to persist builds and avoid rebuild issues
 CMD ["./pokemon-showdown", "start"]
