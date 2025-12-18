@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  pokemon-showdown:
+    build: .
+    container_name: pokemon-showdown-server
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount config directory to persist configuration changes
+      - ./config:/app/config
+      # Mount databases directory to persist data
+      - ./databases:/app/databases
+      # Mount logs directory to persist logs
+      - ./logs:/app/logs
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

@@ -1,0 +1,45 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Node modules (will be installed in container)
+node_modules
+
+# Log files
+logs/*
+*.log
+
+# Build artifacts
+dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+test/
+
+# Documentation
+*.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Config files (will be created in container)
+config/config.js
+config/*.pem
+
+# Database files
+databases/*.db
+databases/*.db-shm
+databases/*.db-wal
