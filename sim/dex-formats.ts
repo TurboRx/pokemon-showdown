@@ -817,6 +817,13 @@ export class DexFormats {
 						pokemonSpecific[0], pokemonSpecific[1], pokemonSpecific[2],
 						pokemonSpecific[3], pokemonSpecific[4]
 					);
+					// also unban the pokemon if it's a whitelist rule (first sign was +)
+					// we need to add the unban to the rule table
+					const pokemonKey = `+pokemon:${pokemonSpecific[0]}`;
+					if (!ruleTable.has(pokemonKey)) {
+						for (const prefix of '+*-') ruleTable.delete(prefix + `pokemon:${pokemonSpecific[0]}`);
+						ruleTable.set(pokemonKey, pokemonSpecific[1] || '');
+					}
 				} else {
 					throw new Error(`Unrecognized rule spec ${ruleSpec}`);
 				}
@@ -1021,27 +1028,49 @@ export class DexFormats {
 	/**
 	 * parse pokemon-specific rules like:
 	 * + blaziken - all moves + sky uppercut + blaze kick
-	 * - blaziken + speed boost
+	 * +Blaziken-allmoves+move:skyuppercut+move:blazekick
 	 */
 	parsePokemonSpecificRule(rule: string): any {
 		const firstChar = rule.charAt(0);
 		const rest = rule.slice(1).trim();
 		
-		// split by ' + ' and ' - ' to get all parts
+		// split by '+' and '-' to get all parts, preserving the operators
 		const parts: Array<{sign: '+' | '-', text: string}> = [];
 		let current = '';
 		let currentSign: '+' | '-' = firstChar as '+' | '-';
 		
 		for (let i = 0; i < rest.length; i++) {
-			if (rest[i] === ' ' && i + 2 < rest.length && (rest[i + 1] === '+' || rest[i + 1] === '-') && rest[i + 2] === ' ') {
-				if (current.trim()) {
-					parts.push({sign: currentSign, text: current.trim()});
-				}
-				currentSign = rest[i + 1] as '+' | '-';
+			const ch = rest[i];
+			const nextCh = rest[i + 1];
+			const prevCh = i > 0 ? rest[i - 1] : '';
+			
+			// check if this is an operator (+ or -)
+			// special case: detect "allmoves" or "allabilities" keywords
+			// if we see "-allmoves" or "-allabilities", that's an operator
+			const remainingText = rest.slice(i);
+			const isKeywordOperator = (ch === '-' && (
+				remainingText.toLowerCase().startsWith('-allmoves') ||
+				remainingText.toLowerCase().startsWith('-allabilities')
+			));
+			
+			// also check for explicit move:/ability: prefixes which indicate operators
+			const isPrefixOperator = (ch === '+' || ch === '-') && (
+				remainingText.toLowerCase().startsWith('+move:') ||
+				remainingText.toLowerCase().startsWith('-move:') ||
+				remainingText.toLowerCase().startsWith('+ability:') ||
+				remainingText.toLowerCase().startsWith('-ability:')
+			);
+			
+			const isOperator = (isKeywordOperator || isPrefixOperator) && current.trim();
+			
+			if (isOperator) {
+				parts.push({sign: currentSign, text: current.trim()});
+				currentSign = ch as '+' | '-';
 				current = '';
-				i += 2; // skip ' + ' or ' - '
+				// skip space after operator if present
+				if (nextCh === ' ') i++;
 			} else {
-				current += rest[i];
+				current += ch;
 			}
 		}
 		if (current.trim()) {
@@ -1108,8 +1137,8 @@ export class DexFormats {
 		case '*':
 		case '+':
 			// check for pokemon-specific rules with mixed +/- syntax
-			// e.g., "+ Blaziken - all moves + Sky Uppercut"
-			if (rule.slice(1).includes(' - ') || rule.slice(1).includes(' + ')) {
+			// e.g., "+ Blaziken - all moves + Sky Uppercut" or "+Blaziken-allmoves+move:skyuppercut"
+			if (rule.slice(1).includes('-') && rule.slice(1).includes('+')) {
 				const pokemonSpecific = this.parsePokemonSpecificRule(rule);
 				if (pokemonSpecific) return pokemonSpecific;
 			}

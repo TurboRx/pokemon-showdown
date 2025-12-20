@@ -250,4 +250,32 @@ describe("Custom Rules", () => {
 		];
 		assert.legalTeam(team, 'gen7customgame@@@Standard');
 	});
+
+	it('should support Pokemon-specific move restrictions', () => {
+		// unban blaziken but only allow specific moves
+		let team = [
+			{ species: 'blaziken', ability: 'blaze', moves: ['skyuppercut', 'blazekick'], evs: { hp: 1 } },
+		];
+		assert.legalTeam(team, 'gen7ou@@@+Blaziken-allmoves+move:skyuppercut+move:blazekick');
+
+		// this should fail because flamethrower is not in the allowed list
+		team = [
+			{ species: 'blaziken', ability: 'blaze', moves: ['flamethrower'], evs: { hp: 1 } },
+		];
+		assert.false.legalTeam(team, 'gen7ou@@@+Blaziken-allmoves+move:skyuppercut+move:blazekick');
+	});
+
+	it('should support Pokemon-specific ability restrictions', () => {
+		// unban blaziken but only allow specific ability
+		let team = [
+			{ species: 'blaziken', ability: 'blaze', moves: ['skyuppercut'], evs: { hp: 1 } },
+		];
+		assert.legalTeam(team, 'gen7ou@@@+Blaziken-allabilities+ability:blaze');
+
+		// this should fail because speedboost is not in the allowed list
+		team = [
+			{ species: 'blaziken', ability: 'speedboost', moves: ['skyuppercut'], evs: { hp: 1 } },
+		];
+		assert.false.legalTeam(team, 'gen7ou@@@+Blaziken-allabilities+ability:blaze');
+	});
 });

@@ -69,6 +69,19 @@ Bans are just a `-` followed by the thing you want to ban.
 
 `- Drizzle ++ Swift Swim` - ban a combination of things in a team (if any Pokémon on your team have Drizzle, no Pokémon can have Swift Swim)
 
+### Pokemon-specific move and ability restrictions
+
+`+ Blaziken - all moves + move:Sky Uppercut + move:Blaze Kick` - allow Blaziken but restrict it to only Sky Uppercut and Blaze Kick
+
+`+ Blaziken - all abilities + ability:Blaze` - allow Blaziken but restrict it to only the Blaze ability
+
+This syntax works as follows:
+- Start with `+` to unban a Pokemon
+- Follow with `- all moves` or `- all abilities` to ban all moves/abilities on that Pokemon
+- Add `+ move:movename` or `+ ability:abilityname` for each move/ability you want to allow
+
+Note: Spaces around `+` and `-` are optional. You can write `+Blaziken-allmoves+move:skyuppercut` or `+ Blaziken - all moves + move:Sky Uppercut`.
+
 
 Unbans
 ------
@@ -355,3 +368,29 @@ For example:
 People often use "tier" to mean "format", but in rulesets, the difference is important. A format is a list of rules for a game you can play, such as "Gen 8 OU". A tier is a list of Pokémon which can be banned or unbanned, such as "OU".
 
 `- OU, + Ubers` - ban all Pokémon currently in OU and unban all Pokémon currently in Ubers
+
+
+Paste URL Integration
+---------------------
+
+For convenience, you can use the `/challengefromrulespaste` command to challenge a user with rules from a paste URL:
+
+`/challengefromrulespaste [username], [paste URL]` - Challenge a user with custom rules from a PokePaste, Pastes.io, or Pastebin URL.
+
+The paste should contain:
+- A line starting with `Format:` followed by the format name (e.g., `Format: Gen 7 OU`)
+- Rules either as `Rules: rule1, rule2, rule3` or one rule per line
+- Comments starting with `#` or `//` are ignored
+
+Example paste content:
+```
+Format: Gen 7 OU
+Rules: +Blaziken-allmoves+move:skyuppercut+move:blazekick, +Blaziken-allabilities+ability:blaze
+```
+
+Or with one rule per line:
+```
+Format: Gen 7 OU
++Blaziken-allmoves+move:skyuppercut+move:blazekick
++Blaziken-allabilities+ability:blaze
+```
