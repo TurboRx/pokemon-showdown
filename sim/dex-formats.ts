@@ -24,7 +24,6 @@ export type ComplexTeamBan = ComplexBan;
 /** pokemon id, source, allowed/banned category, item ids */
 export type PokemonSpecificRule = [string, string, 'moves' | 'abilities', boolean, string[]];
 
-
 export interface GameTimerSettings {
 	dcTimer: boolean;
 	dcTimerBank: boolean;
@@ -1033,17 +1032,16 @@ export class DexFormats {
 	parsePokemonSpecificRule(rule: string): any {
 		const firstChar = rule.charAt(0);
 		const rest = rule.slice(1).trim();
-		
+
 		// split by '+' and '-' to get all parts, preserving the operators
-		const parts: Array<{sign: '+' | '-', text: string}> = [];
+		const parts: { sign: '+' | '-', text: string }[] = [];
 		let current = '';
 		let currentSign: '+' | '-' = firstChar as '+' | '-';
-		
+
 		for (let i = 0; i < rest.length; i++) {
 			const ch = rest[i];
 			const nextCh = rest[i + 1];
-			const prevCh = i > 0 ? rest[i - 1] : '';
-			
+
 			// check if this is an operator (+ or -)
 			// special case: detect "allmoves" or "allabilities" keywords
 			// if we see "-allmoves" or "-allabilities", that's an operator
@@ -1052,7 +1050,7 @@ export class DexFormats {
 				remainingText.toLowerCase().startsWith('-allmoves') ||
 				remainingText.toLowerCase().startsWith('-allabilities')
 			));
-			
+
 			// also check for explicit move:/ability: prefixes which indicate operators
 			const isPrefixOperator = (ch === '+' || ch === '-') && (
 				remainingText.toLowerCase().startsWith('+move:') ||
@@ -1060,12 +1058,12 @@ export class DexFormats {
 				remainingText.toLowerCase().startsWith('+ability:') ||
 				remainingText.toLowerCase().startsWith('-ability:')
 			);
-			
+
 			const isOperator = (isKeywordOperator || isPrefixOperator) && current.trim();
-			
+
 			if (isOperator) {
-				parts.push({sign: currentSign, text: current.trim()});
-				currentSign = ch as '+' | '-';
+				parts.push({ sign: currentSign, text: current.trim() });
+				currentSign = ch;
 				current = '';
 				// skip space after operator if present
 				if (nextCh === ' ') i++;
@@ -1074,11 +1072,11 @@ export class DexFormats {
 			}
 		}
 		if (current.trim()) {
-			parts.push({sign: currentSign, text: current.trim()});
+			parts.push({ sign: currentSign, text: current.trim() });
 		}
-		
+
 		if (parts.length < 2) return null;
-		
+
 		// first part should be a pokemon
 		const pokemonPart = parts[0];
 		let pokemonId: string;
@@ -1091,11 +1089,11 @@ export class DexFormats {
 		} catch {
 			return null;
 		}
-		
+
 		// check if second part is "all moves" or "all abilities"
 		const secondPart = parts[1];
 		const secondText = toID(secondPart.text);
-		
+
 		let category: 'moves' | 'abilities' | null = null;
 		if (secondText === 'allmoves' || secondText === 'pokemontagallmoves') {
 			category = 'moves';
@@ -1104,7 +1102,7 @@ export class DexFormats {
 		} else {
 			return null; // not a pokemon-specific rule
 		}
-		
+
 		// remaining parts should be specific moves/abilities to allow/ban
 		const items: string[] = [];
 		for (let i = 2; i < parts.length; i++) {
@@ -1120,13 +1118,13 @@ export class DexFormats {
 				throw new Error(`Invalid ${category === 'moves' ? 'move' : 'ability'} in rule: ${e.message}`);
 			}
 		}
-		
+
 		// determine if this is a whitelist or blacklist
 		// if first part is +, pokemon is unbanned
 		// if second part is -, category is banned (creating a blacklist)
 		// remaining + items are allowed (whitelist)
 		const isWhitelist = pokemonPart.sign === '+' && secondPart.sign === '-';
-		
+
 		return ['pokemonSpecific', pokemonId, '', category, isWhitelist, items];
 	}
 
