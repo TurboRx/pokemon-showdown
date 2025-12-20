@@ -3054,7 +3054,7 @@ export const commands: Chat.ChatCommands = {
 		if (isNaN(index)) {
 			throw new Chat.ErrorMessage(`Invalid topic index: ${indexStr}. Must be a number.`);
 		}
-		if (!room.settings.topics?.[index]) {
+		if (index < 0 || !room.settings.topics?.[index]) {
 			throw new Chat.ErrorMessage(`Topic ${index + 1} not found.`);
 		}
 		const oldTopic = room.settings.topics[index];
@@ -3071,6 +3071,9 @@ export const commands: Chat.ChatCommands = {
 		if (!target.trim()) {
 			return this.parse(`/help randtopic`);
 		}
+		if (!room.settings.topics?.length) {
+			throw new Chat.ErrorMessage(`This room has no topics to remove.`);
+		}
 		const indices = target.split(',').map(part => {
 			const index = Number(toID(part)) - 1;
 			if (isNaN(index)) {
@@ -3078,9 +3081,6 @@ export const commands: Chat.ChatCommands = {
 			}
 			return index;
 		}).sort((a, b) => b - a);
-		if (!room.settings.topics?.length) {
-			throw new Chat.ErrorMessage(`This room has no topics to remove.`);
-		}
 		const removedTopics = [];
 		for (const index of indices) {
 			if (index < 0 || index >= room.settings.topics.length) {
