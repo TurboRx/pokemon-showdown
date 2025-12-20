@@ -3,7 +3,7 @@ import { FS, Utils } from '../../lib';
 const STORAGE_PATH = 'config/chat-plugins/room-custom-bot.json';
 const MAX_TRIGGER_LENGTH = 100;
 const MAX_RESPONSE_LENGTH = 500;
-const RATE_LIMIT_MS = 10 * 1000; // 10 seconds
+const RATE_LIMIT_MS = 30 * 1000; // 30 seconds
 
 // rate limit tracking: room -> user -> lastResponseTime
 const rateLimits = new Map<RoomID, Map<ID, number>>();
