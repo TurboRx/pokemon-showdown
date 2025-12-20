@@ -41,8 +41,11 @@ export const chatfilter: Chat.ChatFilter = function (message, user, room) {
 	for (const trigger in data.responses) {
 		if (lowerMessage.includes(trigger)) {
 			const response = data.responses[trigger].response;
-			room.add(`|c|☆Room Bot|${response}`);
-			room.update();
+			// delay to send after user message
+			setTimeout(() => {
+				room.add(`|c|*Room Bot|${response}`);
+				room.update();
+			}, 100);
 			break;
 		}
 	}
@@ -132,7 +135,7 @@ export const commands: Chat.ChatCommands = {
 			for (const trigger in data.responses) {
 				const entry = data.responses[trigger];
 				const date = new Date(entry.timestamp).toLocaleDateString();
-				buf += Utils.html`<tr><td>${trigger}</td><td>${entry.response}</td><td>${entry.createdBy}</td><td>${date}</td></tr>`;
+				buf += `<tr><td>${Utils.escapeHTML(trigger)}</td><td>${Utils.escapeHTML(entry.response)}</td><td><username class="username">${Utils.escapeHTML(entry.createdBy)}</username></td><td>${date}</td></tr>`;
 			}
 			buf += `</table></div>`;
 			this.sendReplyBox(buf);
