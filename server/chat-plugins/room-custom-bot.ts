@@ -3,9 +3,15 @@ import { FS, Utils } from '../../lib';
 const STORAGE_PATH = 'config/chat-plugins/room-custom-bot.json';
 const MAX_TRIGGER_LENGTH = 100;
 const MAX_RESPONSE_LENGTH = 500;
+const RATE_LIMIT_MS = 30 * 1000; // 30 seconds
 
-// track last message that triggered bot: room -> user -> lastMessage
-const lastTriggeredMessage = new Map<RoomID, Map<ID, string>>();
+interface LastTrigger {
+	message: string;
+	time: number;
+}
+
+// track last message that triggered bot: room -> user -> {message, time}
+const lastTriggeredMessage = new Map<RoomID, Map<ID, LastTrigger>>();
 
 interface BotResponse {
 	response: string;
@@ -46,16 +52,19 @@ export const chatfilter: Chat.ChatFilter = function (message, user, room) {
 		roomMessages = new Map();
 		lastTriggeredMessage.set(room.roomid, roomMessages);
 	}
-	const lastMessage = roomMessages.get(user.id);
+	const lastTrigger = roomMessages.get(user.id);
 	const lowerMessage = message.toLowerCase();
+	const now = Date.now();
 
-	// if same message as last trigger, skip
-	if (lastMessage === lowerMessage) return;
+	// if same message as last trigger and within rate limit, skip
+	if (lastTrigger && lastTrigger.message === lowerMessage && (now - lastTrigger.time) < RATE_LIMIT_MS) {
+		return;
+	}
 
 	for (const trigger in data.responses) {
 		if (lowerMessage.includes(trigger)) {
 			const response = data.responses[trigger].response;
-			roomMessages.set(user.id, lowerMessage);
+			roomMessages.set(user.id, { message: lowerMessage, time: now });
 			// delay to send after user message
 			setTimeout(() => {
 				room.add(`|c|*Room Bot|${response}`);
