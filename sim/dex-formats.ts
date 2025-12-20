@@ -1029,7 +1029,8 @@ export class DexFormats {
 	 * + blaziken - all moves + sky uppercut + blaze kick
 	 * +Blaziken-allmoves+move:skyuppercut+move:blazekick
 	 */
-	parsePokemonSpecificRule(rule: string): any {
+	parsePokemonSpecificRule(rule: string):
+		['pokemonSpecific', string, string, 'moves' | 'abilities', boolean, string[]] | null {
 		const firstChar = rule.charAt(0);
 		const rest = rule.slice(1).trim();
 
@@ -1046,17 +1047,18 @@ export class DexFormats {
 			// special case: detect "allmoves" or "allabilities" keywords
 			// if we see "-allmoves" or "-allabilities", that's an operator
 			const remainingText = rest.slice(i);
+			const remainingLower = remainingText.toLowerCase();
 			const isKeywordOperator = (ch === '-' && (
-				remainingText.toLowerCase().startsWith('-allmoves') ||
-				remainingText.toLowerCase().startsWith('-allabilities')
+				remainingLower.startsWith('-allmoves') ||
+				remainingLower.startsWith('-allabilities')
 			));
 
 			// also check for explicit move:/ability: prefixes which indicate operators
 			const isPrefixOperator = (ch === '+' || ch === '-') && (
-				remainingText.toLowerCase().startsWith('+move:') ||
-				remainingText.toLowerCase().startsWith('-move:') ||
-				remainingText.toLowerCase().startsWith('+ability:') ||
-				remainingText.toLowerCase().startsWith('-ability:')
+				remainingLower.startsWith('+move:') ||
+				remainingLower.startsWith('-move:') ||
+				remainingLower.startsWith('+ability:') ||
+				remainingLower.startsWith('-ability:')
 			);
 
 			const isOperator = (isKeywordOperator || isPrefixOperator) && current.trim();

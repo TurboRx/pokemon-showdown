@@ -2971,19 +2971,19 @@ export const commands: Chat.ChatCommands = {
 		let rawUrl = '';
 		if (pasteUrl.includes('pokepast.es/')) {
 			// pokepaste
-			const match = /pokepast\.es\/([a-zA-Z0-9]+)/.exec(pasteUrl);
+			const match = /pokepast\.es\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
 			if (match) {
 				rawUrl = `https://pokepast.es/${match[1]}/raw`;
 			}
 		} else if (pasteUrl.includes('pastes.io/')) {
 			// pastes.io - raw url
-			const match = /pastes\.io\/([a-zA-Z0-9]+)/.exec(pasteUrl);
+			const match = /pastes\.io\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
 			if (match) {
 				rawUrl = `https://pastes.io/raw/${match[1]}`;
 			}
 		} else if (pasteUrl.includes('pastebin.com/')) {
 			// pastebin
-			const match = /pastebin\.com\/([a-zA-Z0-9]+)/.exec(pasteUrl);
+			const match = /pastebin\.com\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
 			if (match) {
 				rawUrl = `https://pastebin.com/raw/${match[1]}`;
 			}
