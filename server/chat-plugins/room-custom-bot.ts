@@ -3,6 +3,10 @@ import { FS, Utils } from '../../lib';
 const STORAGE_PATH = 'config/chat-plugins/room-custom-bot.json';
 const MAX_TRIGGER_LENGTH = 100;
 const MAX_RESPONSE_LENGTH = 500;
+const RATE_LIMIT_MS = 10 * 1000; // 10 seconds
+
+// rate limit tracking: room -> user -> lastResponseTime
+const rateLimits = new Map<RoomID, Map<ID, number>>();
 
 interface BotResponse {
 	response: string;
@@ -37,10 +41,20 @@ export const chatfilter: Chat.ChatFilter = function (message, user, room) {
 	const data = roomBotData[room.roomid];
 	if (!data?.enabled) return;
 
+	// check rate limit for this user in this room
+	let roomLimits = rateLimits.get(room.roomid);
+	if (!roomLimits) {
+		roomLimits = new Map();
+		rateLimits.set(room.roomid, roomLimits);
+	}
+	const lastResponse = roomLimits.get(user.id) || 0;
+	if (Date.now() - lastResponse < RATE_LIMIT_MS) return;
+
 	const lowerMessage = message.toLowerCase();
 	for (const trigger in data.responses) {
 		if (lowerMessage.includes(trigger)) {
 			const response = data.responses[trigger].response;
+			roomLimits.set(user.id, Date.now());
 			// delay to send after user message
 			setTimeout(() => {
 				room.add(`|c|*Room Bot|${response}`);
@@ -90,7 +104,7 @@ export const commands: Chat.ChatCommands = {
 			const exists = trimmedTrigger.toLowerCase() in data.responses;
 			data.responses[trimmedTrigger.toLowerCase()] = {
 				response,
-				createdBy: user.id,
+				createdBy: user.name,
 				timestamp: Date.now(),
 			};
 			saveData();
