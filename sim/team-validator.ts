@@ -1925,6 +1925,28 @@ export class TeamValidator {
 		}
 		if (banReason === '') return null;
 
+		// check pokemon-specific move rules
+		const species = dex.species.get(set.species);
+		const pokemonId = toID(species.baseSpecies);
+		for (const rule of ruleTable.pokemonSpecificRules) {
+			if (rule[0] === pokemonId && rule[2] === 'moves') {
+				const isWhitelist = rule[3];
+				const allowedMoves = rule[4];
+				const moveKey = 'move:' + move.id;
+				if (isWhitelist) {
+					// whitelist: only allowed moves can be used
+					if (!allowedMoves.includes(moveKey)) {
+						return `${set.name}'s move ${move.name} is not in the list of allowed moves for ${species.baseSpecies}.`;
+					}
+				} else {
+					// blacklist: banned moves cannot be used
+					if (allowedMoves.includes(moveKey)) {
+						return `${set.name}'s move ${move.name} is banned for ${species.baseSpecies}.`;
+					}
+				}
+			}
+		}
+
 		banReason = ruleTable.check('pokemontag:allmoves');
 		if (banReason) {
 			return `${set.name}'s move ${move.name} is not in the list of allowed moves.`;
@@ -1983,6 +2005,28 @@ export class TeamValidator {
 			return `${set.name}'s ability ${ability.name} is ${banReason}.`;
 		}
 		if (banReason === '') return null;
+
+		// check pokemon-specific ability rules
+		const species = dex.species.get(set.species);
+		const pokemonId = toID(species.baseSpecies);
+		for (const rule of ruleTable.pokemonSpecificRules) {
+			if (rule[0] === pokemonId && rule[2] === 'abilities') {
+				const isWhitelist = rule[3];
+				const allowedAbilities = rule[4];
+				const abilityKey = 'ability:' + ability.id;
+				if (isWhitelist) {
+					// whitelist: only allowed abilities can be used
+					if (!allowedAbilities.includes(abilityKey)) {
+						return `${set.name}'s ability ${ability.name} is not in the list of allowed abilities for ${species.baseSpecies}.`;
+					}
+				} else {
+					// blacklist: banned abilities cannot be used
+					if (allowedAbilities.includes(abilityKey)) {
+						return `${set.name}'s ability ${ability.name} is banned for ${species.baseSpecies}.`;
+					}
+				}
+			}
+		}
 
 		banReason = ruleTable.check('pokemontag:allabilities');
 		if (banReason) {
