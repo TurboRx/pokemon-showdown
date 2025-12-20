@@ -68,13 +68,13 @@ export const commands: Chat.ChatCommands = {
 				throw new Chat.ErrorMessage("This command is unavailable in temporary rooms.");
 			}
 
-			const [trigger, ...responseParts] = target.split('=>');
+			const [trigger, ...responseParts] = target.split(',');
 			if (!trigger || !responseParts.length) {
 				return this.parse('/help roombot');
 			}
 
 			const trimmedTrigger = trigger.trim();
-			const response = responseParts.join('=>').trim();
+			const response = responseParts.join(',').trim();
 
 			if (!trimmedTrigger || !response) {
 				return this.parse('/help roombot');
@@ -189,7 +189,7 @@ export const commands: Chat.ChatCommands = {
 		this.sendReplyBox(
 			`<strong>Room Bot Commands</strong><br />` +
 			`<code>/roombot</code> - Shows status and response count.<br />` +
-			`<code>/roombot custom [trigger] => [response]</code> - Adds or updates a trigger-response pair. Requires: # ~<br />` +
+			`<code>/roombot custom [trigger], [response]</code> - Adds or updates a trigger-response pair. Requires: # ~<br />` +
 			`<code>/roombot remove [trigger]</code> - Removes a trigger-response pair. Requires: # ~<br />` +
 			`<code>/roombot list</code> - Shows all triggers and responses. Requires: + % @ # ~<br />` +
 			`<code>/roombot toggle [on/off]</code> - Enables or disables the bot. Requires: # ~<br />` +
