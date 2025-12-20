@@ -3054,7 +3054,10 @@ export const commands: Chat.ChatCommands = {
 		if (isNaN(index)) {
 			throw new Chat.ErrorMessage(`Invalid topic index: ${indexStr}. Must be a number.`);
 		}
-		if (index < 0 || !room.settings.topics?.[index]) {
+		if (index < 0) {
+			throw new Chat.ErrorMessage(`Invalid topic index: ${indexStr}. Topic indices start at 1.`);
+		}
+		if (!room.settings.topics?.[index]) {
 			throw new Chat.ErrorMessage(`Topic ${index + 1} not found.`);
 		}
 		const oldTopic = room.settings.topics[index];
@@ -3079,11 +3082,14 @@ export const commands: Chat.ChatCommands = {
 			if (isNaN(index)) {
 				throw new Chat.ErrorMessage(`Invalid topic index: ${part.trim()}. Must be a number.`);
 			}
+			if (index < 0) {
+				throw new Chat.ErrorMessage(`Invalid topic index: ${part.trim()}. Topic indices start at 1.`);
+			}
 			return index;
 		}).sort((a, b) => b - a);
 		const removedTopics = [];
 		for (const index of indices) {
-			if (index < 0 || index >= room.settings.topics.length) {
+			if (index >= room.settings.topics.length) {
 				throw new Chat.ErrorMessage(`Topic ${index + 1} not found.`);
 			}
 			const topic = room.settings.topics.splice(index, 1)[0];
