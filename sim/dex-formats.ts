@@ -205,7 +205,7 @@ export class RuleTable extends Map<string, string> {
 
 	/** After a RuleTable has been filled out, resolve its hardcoded numeric properties */
 	resolveNumbers(format: Format, dex: ModdedDex) {
-		// override gameType if specified by value rule
+		// override gameType if specified by value rule (cast needed as format.gameType is readonly)
 		if (this.valueRules.has('gametype')) {
 			(format as any).gameType = dex.toID(this.valueRules.get('gametype')!) as GameType;
 		}

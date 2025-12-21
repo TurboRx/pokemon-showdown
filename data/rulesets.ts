@@ -2067,7 +2067,7 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			}
 			return gameType;
 		},
-		// hardcoded in sim/dex-formats
+		// applied in sim/dex-formats resolveNumbers to override format.gameType
 	},
 	pickedteamsize: {
 		effectType: 'Rule',
