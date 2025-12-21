@@ -74,7 +74,7 @@ describe('Knock Off', () => {
 			{ species: "Blissey", ability: 'naturalcure', moves: ['sleeptalk'] },
 			{ species: "Iron Bundle", ability: 'quarkdrive', item: 'boosterenergy', moves: ['sleeptalk'] },
 		]]);
-		// Electric Terrain is auto-set by Tapu Koko, so Booster Energy won't be consumed
+		// electric terrain is auto-set by tapu koko, so booster energy won't be consumed
 		const bundle = battle.p2.active[1];
 		assert.equal(bundle.item, 'boosterenergy', 'Iron Bundle should have Booster Energy with terrain present');
 		battle.makeChoices('move sleeptalk, move knockoff 2', 'move sleeptalk, move sleeptalk');
