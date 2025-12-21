@@ -205,6 +205,11 @@ export class RuleTable extends Map<string, string> {
 
 	/** After a RuleTable has been filled out, resolve its hardcoded numeric properties */
 	resolveNumbers(format: Format, dex: ModdedDex) {
+		// override gameType if specified by value rule
+		if (this.valueRules.has('gametype')) {
+			(format as any).gameType = dex.toID(this.valueRules.get('gametype')!) as GameType;
+		}
+
 		const gameTypeMinTeamSize = ['triples', 'rotation'].includes(format.gameType as 'triples') ? 3 :
 			format.gameType === 'doubles' ? 2 :
 			1;
