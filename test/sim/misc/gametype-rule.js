@@ -92,7 +92,7 @@ describe('Game Type Rule', () => {
 
 	it('should reject non-singles game types with format-specific restrictions', () => {
 		battle = null;
-		// Shared Power format has onValidateRule that only allows singles
+		// shared power format has onValidateRule that only allows singles
 		const Dex = require('../../../dist/sim/dex').Dex;
 		const BattleClass = require('../../../dist/sim/battle').Battle;
 
