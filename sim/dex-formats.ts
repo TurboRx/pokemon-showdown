@@ -988,7 +988,7 @@ export class DexFormats {
 
 		// if gameType was overridden, validate format's onValidateRule to catch format-specific restrictions
 		if (ruleTable.valueRules.has('gametype')) {
-			format.onValidateRule?.call({ format, ruleTable, dex: this.dex }, undefined);
+			format.onValidateRule?.call({ format, ruleTable, dex: this.dex }, '');
 		}
 
 		if (!repeals) format.ruleTable = ruleTable;
