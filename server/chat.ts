@@ -538,6 +538,8 @@ export class CommandContext extends MessageContext {
 	/** Used only by !rebroadcast */
 	broadcastPrefix: string;
 	broadcastMessage: string;
+	/** tracks if room-visible output was produced during command execution */
+	didRoomOutput: boolean;
 	constructor(options: {
 		message: string, user: User, connection: Connection,
 		room?: Room | null, pmTarget?: User | null, cmd?: string, cmdToken?: string, target?: string, fullCmd?: string,
@@ -570,6 +572,9 @@ export class CommandContext extends MessageContext {
 		this.broadcastToRoom = true;
 		this.broadcastPrefix = options.broadcastPrefix || '';
 		this.broadcastMessage = '';
+		
+		// activity tracking
+		this.didRoomOutput = false;
 	}
 
 	// TODO: return should be void | boolean | Promise<void | boolean>
@@ -1913,15 +1918,21 @@ export const Chat = new class {
 
 		const initialRoomlogLength = room?.log.getLineCount();
 		const context = new CommandContext({ message, room, user, connection });
+		// track context on room for activity detection
+		if (room) (room as any).activeContext = context;
 		const startTime = Date.now();
 		const result = context.parse();
 		if (typeof result?.then === 'function') {
 			void result.then(() => {
 				this.logSlowMessage(startTime, context);
+				this.updateGroupchatActivity(room, context);
 			});
 		} else {
 			this.logSlowMessage(startTime, context);
+			this.updateGroupchatActivity(room, context);
 		}
+		// clear context reference
+		if (room) (room as any).activeContext = null;
 		if (room && room.log.getLineCount() !== initialRoomlogLength) {
 			room.messagesSent++;
 			for (const [handler, numMessages] of room.nthMessageHandlers) {
@@ -1930,6 +1941,12 @@ export const Chat = new class {
 		}
 
 		return result;
+	}
+	updateGroupchatActivity(room: Room | null | undefined, context: CommandContext) {
+		// only update activity for groupchats (isPersonal rooms) when room-visible output was produced
+		if (room?.settings.isPersonal && context.didRoomOutput) {
+			room.pokeExpireTimer();
+		}
 	}
 	logSlowMessage(startTime: number, context: CommandContext) {
 		const timeUsed = Date.now() - startTime;
