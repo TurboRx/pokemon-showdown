@@ -538,7 +538,6 @@ export class CommandContext extends MessageContext {
 	/** Used only by !rebroadcast */
 	broadcastPrefix: string;
 	broadcastMessage: string;
-	/** tracks if room-visible output was produced during command execution */
 	didRoomOutput: boolean;
 	constructor(options: {
 		message: string, user: User, connection: Connection,
@@ -572,8 +571,6 @@ export class CommandContext extends MessageContext {
 		this.broadcastToRoom = true;
 		this.broadcastPrefix = options.broadcastPrefix || '';
 		this.broadcastMessage = '';
-		
-		// activity tracking
 		this.didRoomOutput = false;
 	}
 
@@ -1918,7 +1915,6 @@ export const Chat = new class {
 
 		const initialRoomlogLength = room?.log.getLineCount();
 		const context = new CommandContext({ message, room, user, connection });
-		// track context on room for activity detection
 		if (room) (room as any).activeContext = context;
 		const startTime = Date.now();
 		const result = context.parse();
@@ -1926,13 +1922,13 @@ export const Chat = new class {
 			void result.then(() => {
 				this.logSlowMessage(startTime, context);
 				this.updateGroupchatActivity(room, context);
+				if (room) (room as any).activeContext = null;
 			});
 		} else {
 			this.logSlowMessage(startTime, context);
 			this.updateGroupchatActivity(room, context);
+			if (room) (room as any).activeContext = null;
 		}
-		// clear context reference
-		if (room) (room as any).activeContext = null;
 		if (room && room.log.getLineCount() !== initialRoomlogLength) {
 			room.messagesSent++;
 			for (const [handler, numMessages] of room.nthMessageHandlers) {
@@ -1943,7 +1939,6 @@ export const Chat = new class {
 		return result;
 	}
 	updateGroupchatActivity(room: Room | null | undefined, context: CommandContext) {
-		// only update activity for groupchats (isPersonal rooms) when room-visible output was produced
 		if (room?.settings.isPersonal && context.didRoomOutput) {
 			room.pokeExpireTimer();
 		}
