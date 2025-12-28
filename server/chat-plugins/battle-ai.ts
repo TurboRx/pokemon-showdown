@@ -8,8 +8,7 @@
  * @license MIT
  */
 
-import {FS, Utils} from '../../lib';
-import {BattleReady} from '../ladders-challenges';
+import { FS } from '../../lib';
 
 interface BattleAIProgress {
 	floor: number;
@@ -29,14 +28,14 @@ function loadProgress() {
 				progressData.set(userid as ID, progress as BattleAIProgress);
 			}
 		}
-	} catch (e) {
+	} catch {
 		// File doesn't exist yet or is corrupted
 	}
 }
 
 // Save progress to file
 function saveProgress() {
-	const data: {[userid: string]: BattleAIProgress} = {};
+	const data: { [userid: string]: BattleAIProgress } = {};
 	for (const [userid, progress] of progressData.entries()) {
 		data[userid] = progress;
 	}
@@ -46,14 +45,14 @@ function saveProgress() {
 // Get user progress
 function getUserProgress(userid: ID): BattleAIProgress {
 	if (!progressData.has(userid)) {
-		progressData.set(userid, {floor: 1, lastAttempt: 0});
+		progressData.set(userid, { floor: 1, lastAttempt: 0 });
 	}
 	return progressData.get(userid)!;
 }
 
 // Update user progress
 function updateProgress(userid: ID, floor: number) {
-	progressData.set(userid, {floor, lastAttempt: Date.now()});
+	progressData.set(userid, { floor, lastAttempt: Date.now() });
 	saveProgress();
 }
 
@@ -81,21 +80,21 @@ function getFormatForFloor(floor: number): string {
 class AIRequestHandler {
 	private battle: RoomBattle;
 	private aiPlayer: RoomBattlePlayer;
-	
+
 	constructor(battle: RoomBattle, aiPlayer: RoomBattlePlayer) {
 		this.battle = battle;
 		this.aiPlayer = aiPlayer;
 	}
-	
+
 	// Handle a request and make a random choice
 	handleRequest(requestData: any) {
 		// Wait a bit before responding to simulate thinking
 		setTimeout(() => {
 			if (this.battle.ended) return;
-			
+
 			const request = requestData;
 			let choice = '';
-			
+
 			if (request.wait) {
 				// Just waiting, do nothing
 				return;
@@ -129,12 +128,12 @@ class AIRequestHandler {
 				for (let i = 0; i < request.active.length; i++) {
 					const active = request.active[i];
 					const pokemon = request.side.pokemon[i];
-					
+
 					if (!pokemon || pokemon.condition.endsWith(' fnt')) {
 						choices.push('pass');
 						continue;
 					}
-					
+
 					// Try to use a random available move
 					const availableMoves = [];
 					if (active.moves) {
@@ -144,7 +143,7 @@ class AIRequestHandler {
 							}
 						}
 					}
-					
+
 					if (availableMoves.length > 0) {
 						// Pick a random move
 						const moveIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
@@ -167,7 +166,7 @@ class AIRequestHandler {
 				}
 				choice = choices.join(', ');
 			}
-			
+
 			if (choice) {
 				// Send the choice to the battle
 				this.battle.choose(this.aiPlayer.user, choice);
@@ -194,16 +193,16 @@ function createAIUser(aiName: string): User {
 	aiUser.named = false; // Set to false so it doesn't appear in user lists
 	aiUser.registered = false;
 	aiUser.id = toID(aiName);
-	
+
 	// Mark as a bot so it doesn't appear in normal user lists
 	aiUser.isPublicBot = true;
-	
+
 	// Add a custom property to identify it as a Battle AI
 	(aiUser as any).isBattleAI = true;
-	
+
 	// Don't add to regular user tracking since it's temporary
 	Users.users.set(aiUser.id, aiUser);
-	
+
 	return aiUser;
 }
 
@@ -238,37 +237,18 @@ export const commands: Chat.ChatCommands = {
 			return this.errorReply(`Format ${formatid} not found.`);
 		}
 
-		// Generate random teams for both players
-		const generator = Dex.formats.getRuleTable(format).pickedTeamSize || 0;
-		
 		try {
-			// Create battle ready objects for both players
-			const p1ready = new BattleReady(
-				user.id,
-				formatid,
-				user.battleSettings,
-				0,
-				'challenge'
-			);
-
-			const p2ready = new BattleReady(
-				aiUser.id,
-				formatid,
-				{team: '', hidden: false, inviteOnly: false},
-				0,
-				'challenge'
-			);
-
 			// Create the battle
 			const battleRoom = Rooms.createBattle({
 				format: formatid,
 				players: [
-					{user, team: user.battleSettings.team, invite: ''},
-					{user: aiUser, team: '', invite: ''},
+					{ user, team: user.battleSettings.team, invite: '' },
+					{ user: aiUser, team: '', invite: '' },
 				],
 				rated: false,
 				challengeType: 'challenge',
 				delayedStart: false,
+				title: `${user.name} vs Battle Tower Trainer`,
 			});
 
 			if (!battleRoom) {
@@ -280,15 +260,15 @@ export const commands: Chat.ChatCommands = {
 			if (battleRoom.battle) {
 				(battleRoom.battle as any).aiUser = aiUser;
 				const aiPlayer = battleRoom.battle.playerTable[aiUser.id];
-				
+
 				if (aiPlayer) {
 					// Create AI handler
 					const aiHandler = new AIRequestHandler(battleRoom.battle, aiPlayer);
 					(battleRoom.battle as any).aiHandler = aiHandler;
-					
+
 					// Override the sendRoom method for the AI player to intercept requests
 					const originalSendRoom = aiPlayer.sendRoom.bind(aiPlayer);
-					aiPlayer.sendRoom = function(data: string) {
+					aiPlayer.sendRoom = function (data: string) {
 						// Check if this is a request
 						if (data.startsWith('|request|')) {
 							const requestStr = data.slice(9); // Remove "|request|"
@@ -296,7 +276,7 @@ export const commands: Chat.ChatCommands = {
 								try {
 									const requestData = JSON.parse(requestStr);
 									aiHandler.handleRequest(requestData);
-								} catch (e) {
+								} catch {
 									// Invalid request, ignore
 								}
 							}
@@ -305,13 +285,13 @@ export const commands: Chat.ChatCommands = {
 						return originalSendRoom(data);
 					};
 				}
-				
+
 				// Set up battle end handler to clean up AI and update progress
 				const originalEnd = battleRoom.battle.end.bind(battleRoom.battle);
-				battleRoom.battle.end = function(this: RoomBattle) {
+				battleRoom.battle.end = function (this: RoomBattle, ...args: any[]) {
 					const winner = this.winner;
 					const aiUserId = aiUser.id;
-					
+
 					// Check if user won
 					if (winner && toID(winner) === user.id) {
 						// User won, advance to next floor
@@ -321,17 +301,16 @@ export const commands: Chat.ChatCommands = {
 						// AI won, user stays on same floor
 						this.add(`|raw|<div class="broadcast-red">You were defeated on Floor ${floor}. Try again!</div>`);
 					}
-					
+
 					// Call original end
-					originalEnd.apply(this, arguments as any);
-					
+					void originalEnd.apply(this, args);
+
 					// Clean up AI user after battle ends
 					setTimeout(() => removeAIUser(aiUser), 1000);
 				};
 			}
 
 			this.sendReply(`|raw|<div class="broadcast-green"><strong>Battle AI Challenge - Floor ${floor}</strong><br/>Format: ${format.name}<br/>Opponent: ${aiName}<br/>Good luck!</div>`);
-			
 		} catch (e: any) {
 			removeAIUser(aiUser);
 			Monitor.crashlog(e, 'creating AI battle');
@@ -341,7 +320,7 @@ export const commands: Chat.ChatCommands = {
 	playertesthelp: [
 		`/playertest - Start a battle against an AI opponent. Progress through floors by defeating the AI. Each floor may have different formats and increased difficulty.`,
 	],
-	
+
 	playertestprogress: 'playertestfloor',
 	playertestfloor(target, room, user) {
 		const progress = getUserProgress(user.id);
@@ -356,7 +335,7 @@ export const commands: Chat.ChatCommands = {
 		}
 		const targetUser = Users.get(target);
 		const userid = targetUser ? targetUser.id : toID(target);
-		
+
 		if (progressData.has(userid)) {
 			progressData.delete(userid);
 			saveProgress();
