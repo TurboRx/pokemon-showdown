@@ -194,13 +194,10 @@ function createAIUser(aiName: string): User {
 	aiUser.registered = false;
 	aiUser.id = toID(aiName);
 
-	// Mark as a bot so it doesn't appear in normal user lists
-	aiUser.isPublicBot = true;
-
 	// Add a custom property to identify it as a Battle AI
 	(aiUser as any).isBattleAI = true;
 
-	// Don't add to regular user tracking since it's temporary
+	// Add to user tracking (temporary)
 	Users.users.set(aiUser.id, aiUser);
 
 	return aiUser;
@@ -208,8 +205,8 @@ function createAIUser(aiName: string): User {
 
 // Clean up AI user
 function removeAIUser(aiUser: User) {
-	Users.users.delete(aiUser.id);
 	aiUser.disconnectAll();
+	Users.users.delete(aiUser.id);
 }
 
 export const commands: Chat.ChatCommands = {
@@ -242,8 +239,8 @@ export const commands: Chat.ChatCommands = {
 			const battleRoom = Rooms.createBattle({
 				format: formatid,
 				players: [
-					{ user, team: user.battleSettings.team, invite: '' },
-					{ user: aiUser, team: '', invite: '' },
+					{ user, team: user.battleSettings.team },
+					{ user: aiUser, team: '' },
 				],
 				rated: false,
 				challengeType: 'challenge',
