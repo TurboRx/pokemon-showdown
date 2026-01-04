@@ -2954,6 +2954,105 @@ export const commands: Chat.ChatCommands = {
 		}
 	},
 
+	async challengefromrulespaste(target, room, user, connection) {
+		// parse target as: username, pasteurl
+		const [username, pasteUrl] = target.split(',').map(s => s.trim());
+
+		if (!username || !pasteUrl) {
+			return this.popupReply(`Usage: /challengefromrulespaste [username], [paste URL]`);
+		}
+
+		const targetUserID = toID(username);
+		if (!Users.get(targetUserID)) {
+			return this.popupReply(`User '${targetUserID}' not found.`);
+		}
+
+		// check if URL is from supported paste sites
+		let rawUrl = '';
+		if (pasteUrl.includes('pokepast.es/')) {
+			// pokepaste
+			const match = /pokepast\.es\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
+			if (match) {
+				rawUrl = `https://pokepast.es/${match[1]}/raw`;
+			}
+		} else if (pasteUrl.includes('pastes.io/')) {
+			// pastes.io - raw url
+			const match = /pastes\.io\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
+			if (match) {
+				rawUrl = `https://pastes.io/raw/${match[1]}`;
+			}
+		} else if (pasteUrl.includes('pastebin.com/')) {
+			// pastebin
+			const match = /pastebin\.com\/([a-zA-Z0-9_-]+)/.exec(pasteUrl);
+			if (match) {
+				rawUrl = `https://pastebin.com/raw/${match[1]}`;
+			}
+		}
+
+		if (!rawUrl) {
+			return this.popupReply(`Unsupported paste URL. Please use PokePaste (pokepast.es), Pastes.io, or Pastebin.`);
+		}
+
+		// fetch paste contents
+		if (Monitor.countNetRequests(connection.ip)) {
+			return this.popupReply(`You are making too many network requests.`);
+		}
+
+		let pasteContents: string;
+		try {
+			pasteContents = await Net(rawUrl).get({ timeout: 10000 });
+		} catch (e: any) {
+			return this.popupReply(`Failed to fetch paste: ${e.message}`);
+		}
+
+		// parse the paste contents to extract format and rules
+		// expected format:
+		// Format: [format name]
+		// Rules: [rule1], [rule2], ...
+		// or just a list of rules, one per line
+
+		const lines = pasteContents.split('\n').map(l => l.trim()).filter(l => l);
+		let formatId = '';
+		const rules: string[] = [];
+
+		for (const line of lines) {
+			if (line.toLowerCase().startsWith('format:')) {
+				formatId = toID(line.slice(7).trim());
+			} else if (line.toLowerCase().startsWith('rules:')) {
+				const ruleText = line.slice(6).trim();
+				rules.push(...ruleText.split(',').map(r => r.trim()).filter(r => r));
+			} else if (!line.startsWith('#') && !line.startsWith('//')) {
+				// treat as a rule if not a comment
+				rules.push(line);
+			}
+		}
+
+		if (!formatId) {
+			return this.popupReply(`No format specified in paste. Please include "Format: [format name]" in your paste.`);
+		}
+
+		if (rules.length === 0) {
+			return this.popupReply(`No rules found in paste.`);
+		}
+
+		// build format string
+		const fullFormat = `${formatId}@@@${rules.join(',')}`;
+
+		// validate format
+		try {
+			Dex.formats.validate(fullFormat);
+		} catch (e: any) {
+			return this.popupReply(`Invalid format or rules: ${e.message}`);
+		}
+
+		// issue challenge
+		return this.parse(`/challenge ${targetUserID},${fullFormat}`);
+	},
+	challengefromrulespastehelp: [
+		`/challengefromrulespaste [user], [paste URL] - Challenge a user with custom rules from a PokePaste, Pastes.io, or Pastebin URL.`,
+		`The paste should contain a line "Format: [format]" and rules either as "Rules: rule1, rule2" or one rule per line.`,
+	],
+
 	adminhelp(target, room, user) {
 		this.checkCan('rangeban');
 		let cmds = Chat.allCommands();
