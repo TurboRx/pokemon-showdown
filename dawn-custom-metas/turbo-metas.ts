@@ -17,7 +17,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		},
 	},
 	{
-		name: "[Gen 9] StormShift OU (Random)",
+		name: "[Gen 9] StormShift OU",
 		desc: `OU with weather randomly changing every 5 turns. All weather moves, auto-weather abilities, and weather-extending items are banned.`,
 		mod: 'gen9',
 		ruleset: ['Standard', 'Evasion Abilities Clause', 'Sleep Moves Clause', '!Sleep Clause Mod'],
