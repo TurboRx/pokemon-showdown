@@ -35,7 +35,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		onResidual() {
 			if (this.turn % 5 === 0 && this.turn > 0) {
 				const weathers = ['sunnyday', 'raindance', 'sandstorm', 'snow'];
-				const cycleIndex = (Math.floor(this.turn / 5) - 1) % weathers.length;
+				const cycleIndex = Math.floor(this.turn / 5) % weathers.length;
 				const nextWeather = weathers[cycleIndex];
 				this.field.setWeather(nextWeather);
 				this.add('-message', `The weather shifted to ${nextWeather}!`);
