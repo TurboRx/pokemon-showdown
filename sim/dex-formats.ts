@@ -21,6 +21,9 @@ type FormatEffectType = 'Format' | 'Ruleset' | 'Rule' | 'ValidatorRule';
 export type ComplexBan = [string, string, number, string[]];
 export type ComplexTeamBan = ComplexBan;
 
+/** pokemon id, source, allowed/banned category, item ids */
+export type PokemonSpecificRule = [string, string, 'moves' | 'abilities', boolean, string[]];
+
 export interface GameTimerSettings {
 	dcTimer: boolean;
 	dcTimerBank: boolean;
@@ -45,6 +48,7 @@ export interface GameTimerSettings {
 export class RuleTable extends Map<string, string> {
 	complexBans: ComplexBan[];
 	complexTeamBans: ComplexTeamBan[];
+	pokemonSpecificRules: PokemonSpecificRule[];
 	checkCanLearn: [TeamValidator['checkCanLearn'], string] | null;
 	onChooseTeam: [NonNullable<Format['onChooseTeam']>, string] | null;
 	timer: [Partial<GameTimerSettings>, string] | null;
@@ -68,6 +72,7 @@ export class RuleTable extends Map<string, string> {
 		super();
 		this.complexBans = [];
 		this.complexTeamBans = [];
+		this.pokemonSpecificRules = [];
 		this.checkCanLearn = null;
 		this.onChooseTeam = null;
 		this.timer = null;
@@ -200,6 +205,23 @@ export class RuleTable extends Map<string, string> {
 			this.complexTeamBans[complexBanTeamIndex] = [rule, source, limit, bans];
 		} else {
 			this.complexTeamBans.push([rule, source, limit, bans]);
+		}
+	}
+
+	addPokemonSpecificRule(
+		pokemon: string, source: string, category: 'moves' | 'abilities', isWhitelist: boolean, items: string[]
+	) {
+		// check if rule already exists for this pokemon+category
+		const existingIndex = this.pokemonSpecificRules.findIndex(
+			rule => rule[0] === pokemon && rule[2] === category
+		);
+		if (existingIndex !== -1) {
+			// merge with existing rule
+			const existing = this.pokemonSpecificRules[existingIndex];
+			const mergedItems = [...new Set([...existing[4], ...items])];
+			this.pokemonSpecificRules[existingIndex] = [pokemon, source, category, isWhitelist, mergedItems];
+		} else {
+			this.pokemonSpecificRules.push([pokemon, source, category, isWhitelist, items]);
 		}
 	}
 
@@ -779,7 +801,7 @@ export class DexFormats {
 		// if (format.customRules) console.log(`${format.id}: ${format.customRules.join(', ')}`);
 
 		for (let ruleSpec of ruleSpecs) {
-			// complex ban/unban
+			// complex ban/unban and pokemon-specific rules
 			if (typeof ruleSpec !== 'string') {
 				if (ruleSpec[0] === 'complexTeamBan') {
 					const complexTeamBan: ComplexTeamBan = ruleSpec.slice(1) as ComplexTeamBan;
@@ -787,6 +809,20 @@ export class DexFormats {
 				} else if (ruleSpec[0] === 'complexBan') {
 					const complexBan: ComplexBan = ruleSpec.slice(1) as ComplexBan;
 					ruleTable.addComplexBan(complexBan[0], complexBan[1], complexBan[2], complexBan[3]);
+				} else if (ruleSpec[0] === 'pokemonSpecific') {
+					// [0]=type, [1]=pokemon, [2]=source, [3]=category, [4]=isWhitelist, [5]=items
+					const pokemonSpecific: PokemonSpecificRule = ruleSpec.slice(1) as PokemonSpecificRule;
+					ruleTable.addPokemonSpecificRule(
+						pokemonSpecific[0], pokemonSpecific[1], pokemonSpecific[2],
+						pokemonSpecific[3], pokemonSpecific[4]
+					);
+					// also unban the pokemon if it's a whitelist rule (first sign was +)
+					// we need to add the unban to the rule table
+					const pokemonKey = `+pokemon:${pokemonSpecific[0]}`;
+					if (!ruleTable.has(pokemonKey)) {
+						for (const prefix of '+*-') ruleTable.delete(prefix + `pokemon:${pokemonSpecific[0]}`);
+						ruleTable.set(pokemonKey, pokemonSpecific[1] || '');
+					}
 				} else {
 					throw new Error(`Unrecognized rule spec ${ruleSpec}`);
 				}
@@ -931,6 +967,12 @@ export class DexFormats {
 			for (const [subRule, source, limit, bans] of subRuleTable.complexTeamBans) {
 				ruleTable.addComplexTeamBan(subRule, source || subformat.name, limit, bans);
 			}
+			for (const pokemonSpecific of subRuleTable.pokemonSpecificRules) {
+				ruleTable.addPokemonSpecificRule(
+					pokemonSpecific[0], pokemonSpecific[1] || subformat.name,
+					pokemonSpecific[2], pokemonSpecific[3], pokemonSpecific[4]
+				);
+			}
 			if (subRuleTable.checkCanLearn) {
 				if (ruleTable.checkCanLearn) {
 					throw new Error(
@@ -982,12 +1024,124 @@ export class DexFormats {
 		return ruleTable;
 	}
 
+	/**
+	 * parse pokemon-specific rules like:
+	 * + blaziken - all moves + sky uppercut + blaze kick
+	 * +Blaziken-allmoves+move:skyuppercut+move:blazekick
+	 */
+	parsePokemonSpecificRule(rule: string):
+		['pokemonSpecific', string, string, 'moves' | 'abilities', boolean, string[]] | null {
+		const firstChar = rule.charAt(0);
+		const rest = rule.slice(1).trim();
+
+		// split by '+' and '-' to get all parts, preserving the operators
+		const parts: { sign: '+' | '-', text: string }[] = [];
+		let current = '';
+		let currentSign: '+' | '-' = firstChar as '+' | '-';
+
+		for (let i = 0; i < rest.length; i++) {
+			const ch = rest[i];
+			const nextCh = rest[i + 1];
+
+			// check if this is an operator (+ or -)
+			// special case: detect "allmoves" or "allabilities" keywords
+			// if we see "-allmoves" or "-allabilities", that's an operator
+			const remainingText = rest.slice(i);
+			const remainingLower = remainingText.toLowerCase();
+			const isKeywordOperator = (ch === '-' && (
+				remainingLower.startsWith('-allmoves') ||
+				remainingLower.startsWith('-allabilities')
+			));
+
+			// also check for explicit move:/ability: prefixes which indicate operators
+			const isPrefixOperator = (ch === '+' || ch === '-') && (
+				remainingLower.startsWith('+move:') ||
+				remainingLower.startsWith('-move:') ||
+				remainingLower.startsWith('+ability:') ||
+				remainingLower.startsWith('-ability:')
+			);
+
+			const isOperator = (isKeywordOperator || isPrefixOperator) && current.trim();
+
+			if (isOperator) {
+				parts.push({ sign: currentSign, text: current.trim() });
+				currentSign = ch;
+				current = '';
+				// skip space after operator if present
+				if (nextCh === ' ') i++;
+			} else {
+				current += ch;
+			}
+		}
+		if (current.trim()) {
+			parts.push({ sign: currentSign, text: current.trim() });
+		}
+
+		if (parts.length < 2) return null;
+
+		// first part should be a pokemon
+		const pokemonPart = parts[0];
+		let pokemonId: string;
+		try {
+			const validated = this.validateBanRule(pokemonPart.text);
+			if (!validated.startsWith('pokemon:') && !validated.startsWith('basepokemon:')) {
+				return null; // not a pokemon rule
+			}
+			pokemonId = validated.replace(/^(base)?pokemon:/, '');
+		} catch {
+			return null;
+		}
+
+		// check if second part is "all moves" or "all abilities"
+		const secondPart = parts[1];
+		const secondText = toID(secondPart.text);
+
+		let category: 'moves' | 'abilities' | null = null;
+		if (secondText === 'allmoves' || secondText === 'pokemontagallmoves') {
+			category = 'moves';
+		} else if (secondText === 'allabilities' || secondText === 'pokemontagallabilities') {
+			category = 'abilities';
+		} else {
+			return null; // not a pokemon-specific rule
+		}
+
+		// remaining parts should be specific moves/abilities to allow/ban
+		const items: string[] = [];
+		for (let i = 2; i < parts.length; i++) {
+			try {
+				const validated = this.validateBanRule(parts[i].text);
+				const expectedPrefix = category === 'moves' ? 'move:' : 'ability:';
+				if (validated.startsWith(expectedPrefix)) {
+					items.push(validated);
+				} else {
+					throw new Error(`Expected ${category === 'moves' ? 'a move' : 'an ability'} but got ${parts[i].text}`);
+				}
+			} catch (e: any) {
+				throw new Error(`Invalid ${category === 'moves' ? 'move' : 'ability'} in rule: ${e.message}`);
+			}
+		}
+
+		// determine if this is a whitelist or blacklist
+		// if first part is +, pokemon is unbanned
+		// if second part is -, category is banned (creating a blacklist)
+		// remaining + items are allowed (whitelist)
+		const isWhitelist = pokemonPart.sign === '+' && secondPart.sign === '-';
+
+		return ['pokemonSpecific', pokemonId, '', category, isWhitelist, items];
+	}
+
 	validateRule(rule: string, format: Format | null = null) {
 		if (rule !== rule.trim()) throw new Error(`Rule "${rule}" should be trimmed`);
 		switch (rule.charAt(0)) {
 		case '-':
 		case '*':
 		case '+':
+			// check for pokemon-specific rules with mixed +/- syntax
+			// e.g., "+ Blaziken - all moves + Sky Uppercut" or "+Blaziken-allmoves+move:skyuppercut"
+			if (rule.slice(1).includes('-') && rule.slice(1).includes('+')) {
+				const pokemonSpecific = this.parsePokemonSpecificRule(rule);
+				if (pokemonSpecific) return pokemonSpecific;
+			}
 			if (rule.slice(1).includes('>') || rule.slice(1).includes('+')) {
 				let buf = rule.slice(1);
 				const gtIndex = buf.lastIndexOf('>');
