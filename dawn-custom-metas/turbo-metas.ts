@@ -18,7 +18,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] StormShift OU",
-		desc: `OU with weather randomly changing every 5 turns. All weather moves, auto-weather abilities, and weather-extending items are banned.`,
+		desc: `OU with weather cycling every 5 turns in a predictable pattern: Sunny Day → Rain Dance → Sandstorm → Snow. All weather moves, auto-weather abilities, and weather-extending items are banned.`,
 		mod: 'gen9',
 		ruleset: ['Standard', 'Evasion Abilities Clause', 'Sleep Moves Clause', '!Sleep Clause Mod'],
 		banlist: [
@@ -28,18 +28,17 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 			'Damp Rock', 'Heat Rock', 'Icy Rock', 'Smooth Rock',
 		],
 		onBegin() {
-			const weathers = ['sunnyday', 'raindance', 'sandstorm', 'snow'];
-			const randomWeather = this.sample(weathers);
-			this.field.setWeather(randomWeather);
-			this.add('-message', `The weather shifted to ${randomWeather}!`);
+			this.field.setWeather('sunnyday');
+			this.add('-message', `The weather is now sunny!`);
 		},
 		onResidualOrder: 1,
 		onResidual() {
-			if (this.turn % 5 === 0) {
+			if (this.turn % 5 === 0 && this.turn > 0) {
 				const weathers = ['sunnyday', 'raindance', 'sandstorm', 'snow'];
-				const randomWeather = this.sample(weathers);
-				this.field.setWeather(randomWeather);
-				this.add('-message', `The weather shifted to ${randomWeather}!`);
+				const cycleIndex = (Math.floor(this.turn / 5) - 1) % weathers.length;
+				const nextWeather = weathers[cycleIndex];
+				this.field.setWeather(nextWeather);
+				this.add('-message', `The weather shifted to ${nextWeather}!`);
 			}
 		},
 	},
