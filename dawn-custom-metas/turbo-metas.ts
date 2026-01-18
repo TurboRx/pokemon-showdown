@@ -5,7 +5,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Gravity Rush OU",
-		desc: `OU with permanent Gravity field effect and all sleep-inducing moves banned. **Made by TurboRx**`,
+		desc: `OU with permanent Gravity field effect and all sleep-inducing moves banned.`,
 		mod: 'gen9',
 		ruleset: ['Standard', 'Evasion Abilities Clause'],
 		banlist: [
@@ -18,7 +18,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] StormShift OU",
-		desc: `OU with weather cycling every 5 turns in a predictable pattern: Sunny Day → Rain Dance → Sandstorm → Snow. All weather moves, auto-weather abilities, and weather-extending items are banned. **Made by TurboRx**`,
+		desc: `OU with weather cycling every 5 turns in a predictable pattern: Sunny Day → Rain Dance → Sandstorm → Snow. All weather moves, auto-weather abilities, and weather-extending items are banned.`,
 		mod: 'gen9',
 		ruleset: ['Standard', 'Evasion Abilities Clause', 'Sleep Moves Clause', '!Sleep Clause Mod'],
 		banlist: [
@@ -44,7 +44,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Gravity Rush Random Battle",
-		desc: `Random teams with a permanent Gravity field effect and all sleep-inducing moves banned. **Made by TurboRx**`,
+		desc: `Random teams with a permanent Gravity field effect and all sleep-inducing moves banned.`,
 		mod: 'gen9',
 		team: 'random',
 		ruleset: ['[Gen 9] Random Battle'],
@@ -57,7 +57,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] StormShift Random Battle",
-		desc: `Random teams with weather cycling every 5 turns in the pattern Sunny → Rain → Sand → Snow. Weather-setting moves/abilities/items remain banned. **Made by TurboRx**`,
+		desc: `Random teams with weather cycling every 5 turns in the pattern Sunny → Rain → Sand → Snow. Weather-setting moves/abilities/items remain banned.`,
 		mod: 'gen9',
 		team: 'random',
 		ruleset: ['[Gen 9] Random Battle'],
