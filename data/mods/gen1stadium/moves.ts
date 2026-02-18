@@ -95,7 +95,7 @@ export const Moves: import('../../../sim/dex-moves').ModdedMoveDataTable = {
 		damageCallback(pokemon, target) {
 			let damageReceived = 0;
 			let moveUsed: ID | undefined;
-			
+
 			// substitute creates multiple attackedBy entries, use the one with damage
 			for (const attacker of pokemon.attackedBy) {
 				if (attacker.thisTurn && attacker.source === target && attacker.damage > damageReceived) {
